@@ -1,0 +1,12 @@
+(name entity)
+
+(trigger
+    (tab ent))
+
+(only-in source.vhdl)
+
+(snippet [entity %{1="%{TM_FILENAME/(.*?)(\\..+)/$1/}"} is
+  port (
+	%{0="clock"}
+  ) ;
+end entity ; -- %{1="%{TM_FILENAME/(.*?)(\\..+)/$1/}"}])

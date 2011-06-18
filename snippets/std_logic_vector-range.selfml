@@ -1,0 +1,8 @@
+(name [std_logic_vector range])
+
+(trigger
+    (tab slvr))
+
+(only-in source.vhdl)
+
+(snippet [std_logic_vector(%{1="signal"}'range) ;%{0}])

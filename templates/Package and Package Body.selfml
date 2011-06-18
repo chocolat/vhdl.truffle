@@ -1,0 +1,24 @@
+(name [Package and Package Body])
+
+(group.platform Misc)
+
+(group.principles VHDL)
+
+(file.primary
+    (name template_package)
+    (filename template_package.vhd)
+    (contents [library ieee ;
+use ieee.std_logic_1164.all ;
+use ieee.numeric_std.all ;
+
+package %{TM_NEW_FILE_BASENAME} is
+
+end package %{TM_NEW_FILE_BASENAME} ;
+
+library ieee ;
+use ieee.std_logic_1164.all ;
+use ieee.numeric_std.all ;
+
+package body %{TM_NEW_FILE_BASENAME} is
+
+end package %{TM_NEW_FILE_BASENAME} ;]))

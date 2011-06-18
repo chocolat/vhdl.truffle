@@ -1,0 +1,15 @@
+(name case)
+
+(trigger
+    (tab case))
+
+(only-in source.vhdl)
+
+(snippet [case( %{1="signal_name"} ) is
+
+	when %{2="IDLE"} =>
+		%{0}
+
+	when others =>
+
+end case ;])

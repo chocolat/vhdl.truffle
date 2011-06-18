@@ -1,0 +1,8 @@
+(name [unsigned downto])
+
+(trigger
+    (tab u))
+
+(only-in source.vhdl)
+
+(snippet [unsigned(%{1="x"} downto %{2="0"}) ;%{0}])

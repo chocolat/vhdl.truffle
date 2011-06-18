@@ -1,0 +1,8 @@
+(name [unsigned range])
+
+(trigger
+    (tab ur))
+
+(only-in source.vhdl)
+
+(snippet [unsigned(%{1="signal"}'range) ;%{0}])

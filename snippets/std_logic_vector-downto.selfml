@@ -1,0 +1,8 @@
+(name [std_logic_vector downto])
+
+(trigger
+    (tab slv))
+
+(only-in source.vhdl)
+
+(snippet [std_logic_vector(%{1="x"} downto %{2="0"}) ;%{0}])

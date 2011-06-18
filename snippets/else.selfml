@@ -1,0 +1,9 @@
+(name else)
+
+(trigger
+    (tab else))
+
+(only-in source.vhdl)
+
+(snippet [else
+	%{0}])

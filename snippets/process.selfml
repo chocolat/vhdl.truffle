@@ -1,0 +1,11 @@
+(name process)
+
+(trigger
+    (tab pro))
+
+(only-in source.vhdl)
+
+(snippet [%{1="identifier"} : process( %{2="sensitivity_list"} )
+begin
+	%{0}
+end process ; -- %{1="identifier"}])

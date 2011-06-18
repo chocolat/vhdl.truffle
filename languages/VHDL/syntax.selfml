@@ -1,0 +1,1041 @@
+(root source.vhdl
+    (include @block_processing)
+    (include @cleanup))
+
+(collection function_definition_pattern
+    (zone meta.block.function_definition.vhdl
+        (start
+            (regex [(?x)
+						# From the beginning of the line
+						^\s*
+
+						# The word function $1
+						((?i:function))\s+
+
+						(
+							# A valid normal identifier $3
+							 ([a-zA-Z][a-zA-Z\d_]*)
+							# A valid string quoted identifier $4
+							|("\S+")
+							# A valid backslash escaped identifier $5
+							|(\\.+\\)
+							# An invalid identifier $5
+							|(.+?)
+						)
+
+						# Check to make sure we have a list or we return
+						(?=\s*
+							(
+								 \(
+								|(?i:\breturn\b)
+							)
+						)
+					]
+                (3 entity.name.function.function.begin.vhdl)
+                (4 entity.name.function.function.begin.vhdl)
+                (5 entity.name.function.function.begin.vhdl)
+                (1 keyword.language.vhdl)
+                (6 invalid.illegal.invalid.identifier.vhdl)))
+        (end
+            (regex [(?x)
+						# From the beginning of the line
+						^\s*
+
+						# The word end $1
+						((?i:end))
+
+						# Optional word function $3
+						(\s+((?i:function)))?
+
+						# Optional matched identifier $6 or mismatched identifier $7
+						(\s+((\3|\4|\5)|(.+?)))?
+
+						# Ending with whitespace and semicolon
+						(?=\s*;)
+					]
+                (7 invalid.illegal.mismatched.identifier.vhdl)
+                (3 keyword.language.vhdl)
+                (1 keyword.language.vhdl)
+                (6 entity.name.function.function.end.vhdl)))
+        (subzones
+            (include @control_patterns)
+            (include @parenthetical_list)
+            (include @type_pattern)
+            (include @record_pattern)
+            (include @cleanup))))
+
+(collection block_processing
+    (include @package_pattern)
+    (include @package_body_pattern)
+    (include @entity_pattern)
+    (include @architecture_pattern))
+
+(collection while_pattern
+    (zone meta.block.while.vhdl
+        (start
+            (regex [(?x)
+						# From the beginning of the line
+						^\s*
+						(
+							# Check for an identifier $2
+							([a-zA-Z][a-zA-Z0-9_]*)
+
+							# Followed by a colon $3
+							\s*(:)\s*
+						)?
+
+						# The for keyword $4
+						\b((?i:while))\b
+					]
+                (3 punctuation.vhdl)
+                (4 keyword.language.vhdl)
+                (2 [])))
+        (end
+            (regex [(?x)
+						# The word end $1
+						\b((?i:end))\s+
+						(
+							# Followed by keyword loop $3
+							 ((?i:loop))
+
+							# But it really is required $4
+							|(\S+)
+						)\b
+
+						# The matching identifier $7 or an invalid identifier $8
+						(\s+((\2)|(.+?)))?
+
+						# Only space and a semicolon left
+						(?=\s*;)
+					]
+                (7 entity.name.tag.while.loop.vhdl)
+                (3 keyword.language.vhdl)
+                (8 invalid.illegal.mismatched.identifier)
+                (4 invalid.illegal.loop.keyword.required.vhdl)
+                (1 keyword.language.vhdl)))
+        (subzones
+            (include @control_patterns)
+            (include @cleanup))))
+
+(collection component_instantiation_pattern
+    (zone meta.block.component_instantiation.vhdl
+        (start
+            (regex [(?x)
+						# From the beginning of the line ...
+						^\s*
+
+						# Match a valid identifier $1
+						([a-zA-Z][a-zA-Z0-9_]*)
+
+						# Colon! $2
+						\s*(:)\s*
+
+						# Another valid identifier $3
+						([a-zA-Z][a-zA-Z0-9_]*)\b
+
+						# Make sure we are just the other word, or the beginning of
+						# a generic or port mapping
+						(?=\s*($|generic|port))
+					]
+                (3 entity.name.tag.component.reference.vhdl)
+                (1 entity.name.section.component_instantiation.vhdl)
+                (2 punctuation.vhdl)))
+        (end
+            (regex ;
+                (0 punctuation.vhdl)))
+        (subzones
+            (include @parenthetical_list)
+            (include @cleanup))))
+
+(collection architecture_pattern
+    (zone meta.block.architecture
+        (start
+            (regex [(?x)
+
+						# The word architecture $1
+						\b((?i:architecture))\s+
+						
+						# Followed up by a valid $3 or invalid identifier $4
+						(([a-zA-z][a-zA-z0-9_]*)|(.+))(?=\s)\s+
+
+						# The word of $5
+						((?i:of))\s+
+
+						# Followed by a valid $7 or invalid identifier $8
+						(([a-zA-Z][a-zA-Z0-9_]*)|(.+?))(?=\s*(?i:is))\b
+					]
+                (7 entity.name.type.entity.reference.vhdl)
+                (3 entity.name.type.architecture.begin.vhdl)
+                (8 invalid.illegal.invalid.identifier.vhdl)
+                (4 invalid.illegal.invalid.identifier.vhdl)
+                (5 keyword.language.vhdl)
+                (1 keyword.language.vhdl)))
+        (end
+            (regex [(?x)
+						# The word end $1
+						\b((?i:end))
+
+						# Optional word architecture $3
+						(\s+((?i:architecture)))?
+
+						# Optional same identifier $6 or illegal identifier $7
+						(\s+((\3)|(.+?)))?
+
+						# This will cause the previous to capture until just before the ; or $
+						(?=\s*;)
+					]
+                (7 invalid.illegal.mismatched.identifier.vhdl)
+                (3 keyword.language.vhdl)
+                (1 keyword.language.vhdl)
+                (6 entity.name.type.architecture.end.vhdl)))
+        (subzones
+            (include @function_definition_pattern)
+            (include @procedure_definition_pattern)
+            (include @component_pattern)
+            (include @if_pattern)
+            (include @process_pattern)
+            (include @type_pattern)
+            (include @record_pattern)
+            (include @for_pattern)
+            (include @entity_instantiation_pattern)
+            (include @component_instantiation_pattern)
+            (include @cleanup))))
+
+(collection function_prototype_pattern
+    (zone meta.block.function_prototype.vhdl
+        (start
+            (regex [(?x)
+						# From the beginning of the line
+						^\s*
+
+						# The word function $1
+						((?i:function))\s+
+
+						
+						(
+							# A valid normal identifier $3
+							 ([a-zA-Z][a-zA-Z\d_]*)
+							# A valid quoted identifier $4
+							|("\S+")
+							# A valid backslash escaped identifier $5
+							|(\\.+\\)
+							# An invalid identifier $6
+							|(.+?)
+						)
+
+						# Check to make sure we have a list or we return
+						(?=\s*
+							(
+								 \(
+								|(?i:\breturn\b)
+							)
+						)
+					]
+                (3 entity.name.function.function.prototype.vhdl)
+                (4 entity.name.function.function.prototype.vhdl)
+                (5 entity.name.function.function.prototype.vhdl)
+                (1 keyword.language.vhdl)
+                (6 invalid.illegal.function.name.vhdl)))
+        (end
+            (regex [(?<=;)]))
+        (subzones
+            (zone
+                (start
+                    (regex [\b(?i:return)(?=\s+[^;]+\s*;)]
+                        (0 keyword.language.vhdl)))
+                (end
+                    (regex \;
+                        (0 punctuation.terminator.function_prototype.vhdl)))
+                (subzones
+                    (include @parenthetical_list)
+                    (include @cleanup)))
+            (include @parenthetical_list)
+            (include @cleanup))))
+
+(collection comments
+    (zone comment.line.double-dash.vhdl
+        (match
+            (regex --.*$\n?))))
+
+(collection subtype_pattern
+    (zone meta.block.subtype.vhdl
+        (start
+            (regex [(?x)
+						# The word subtype $1
+						\b((?i:subtype))\s+
+
+						# Valid identifier $3 or invalid identifier $4
+						(([a-zA-Z][a-zA-Z0-9_]*)|(.+?))\s+
+
+						# The word is $5
+						((?i:is))\b
+					]
+                (3 entity.name.type.subtype.vhdl)
+                (4 invalid.illegal.invalid.identifier.vhdl)
+                (5 keyword.language.vhdl)
+                (1 keyword.language.vhdl)))
+        (end
+            (regex ;
+                (0 punctuation.vhdl)))
+        (subzones
+            (include @cleanup))))
+
+(collection entity_instantiation_pattern
+    (zone meta.block.entity_instantiation.vhdl
+        (start
+            (regex [(?x)
+						# From the beginning of the line
+						^\s*
+
+						# Component identifier or illegal identifier $1
+						([a-zA-Z][a-zA-Z0-9_]*)
+
+						# Colon! $2
+						\s*(:)\s*
+
+						# Optional word use $4
+						(((?i:use))\s+)?
+
+						# Required word entity $5
+						((?i:entity))\s+
+
+						# Optional library unit identifier $8 for invalid identifier $9 followed by a dot $10
+						(
+							(([a-zA-Z][a-zA-Z0-9_]*)|(.+?))
+							(\.)
+						)?
+
+						# Entity name reference $12 or illegal identifier $13
+						(([a-zA-Z][a-zA-Z0-9_]*)|(.+?))
+
+						# Check to see if we are being followed by either open paren, end of line, or port or generic words
+						(?=\s*(\(|$|(?i:port|generic)))
+
+						# Optional architecture elaboration
+						(
+							# Open paren $16
+							\s*(\()\s*
+
+							# Arch identifier $18 or invalid identifier $19
+							(([a-zA-Z][a-zA-Z0-9_]*)|(.+?))(?=\s*\))
+
+							# Close paren $21
+							\s*(\))
+						)?
+					]
+                (10 punctuation.vhdl)
+                (2 punctuation.vhdl)
+                (21 punctuation.vhdl)
+                (9 invalid.illegal.invalid.identifier.vhdl)
+                (16 punctuation.vhdl)
+                (4 keyword.language.vhdl)
+                (5 keyword.language.vhdl)
+                (12 entity.name.tag.entity.reference.vhdl)
+                (13 invalid.illegal.invalid.identifier.vhdl)
+                (18 entity.name.tag.architecture.reference.vhdl)
+                (8 entity.name.tag.library.reference.vhdl)
+                (1 entity.name.section.entity_instantiation.vhdl)
+                (19 invalid.illegal.invalid.identifier.vhdl)))
+        (end
+            (regex ;
+                (0 punctuation.vhdl)))
+        (subzones
+            (include @parenthetical_list)
+            (include @cleanup))))
+
+(collection component_pattern
+    (zone meta.block.component.vhdl
+        (start
+            (regex [(?x)
+						# From the beginning of the line ...
+						^\s*
+
+						# The word component $1
+						\b((?i:component))\s+
+
+						# A valid identifier $3 or invalid identifier $4
+						(([a-zA-Z_][a-zA-Z0-9_]*)\s*|(.+?))(?=\b(?i:is|port)\b|$|--)
+
+						# Optional word is $6
+						(\b((?i:is\b)))?
+					]
+                (3 entity.name.type.component.begin.vhdl)
+                (4 invalid.illegal.invalid.identifier.vhdl)
+                (1 keyword.language.vhdl)
+                (6 keyword.language.vhdl)))
+        (end
+            (regex [(?x)
+						# The word end $1
+						\b((?:end))\s+
+
+						# The word component $3 or illegal word $4
+						(((?i:component\b))|(.+?))(?=\s*|;)
+						
+						# Optional identifier $7 or illegal mismatched $8
+						(\s+((\3)|(.+?)))?(?=\s*;)
+					]
+                (7 entity.name.type.component.end.vhdl)
+                (3 keyword.language.vhdl)
+                (8 invalid.illegal.mismatched.identifier.vhdl)
+                (4 invalid.illegal.component.keyword.required.vhdl)
+                (1 keyword.language.vhdl)))
+        (subzones
+            (include @generic_list_pattern)
+            (include @port_list_pattern)
+            (include @comments))))
+
+(collection support_types
+    (zone support.type.std.standard.vhdl
+        (match
+            (regex [\b(?i:boolean|bit|character|severity_level|integer|real|time|delay_length|now|natural|positive|string|bit_vector|file_open_kind|file_open_status|fs|ps|ns|us|ms|sec|min|hr|severity_level|note|warning|error|failure)\b])))
+    (zone support.type.std.textio.vhdl
+        (match
+            (regex [\b(?i:line|text|side|width|input|output)\b])))
+    (zone support.type.ieee.std_logic_1164.vhdl
+        (match
+            (regex [\b(?i:std_logic|std_ulogic|std_logic_vector|std_ulogic_vector)\b])))
+    (zone support.type.ieee.numeric_std.vhdl
+        (match
+            (regex [\b(?i:signed|unsigned)\b])))
+    (zone support.type.ieee.math_complex.vhdl
+        (match
+            (regex [\b(?i:complex|complex_polar)\b]))))
+
+(collection generic_list_pattern
+    (zone meta.block.generic_list.vhdl
+        (start
+            (regex [\b(?i:generic)\b]
+                (0 keyword.language.vhdl)))
+        (end
+            (regex ;
+                (0 punctuation.vhdl)))
+        (subzones
+            (include @parenthetical_list))))
+
+(collection for_pattern
+    (zone meta.block.for.vhdl
+        (start
+            (regex [(?x)
+						# From the beginning of the line
+						^\s*
+						(
+							# Check for an identifier $2
+							([a-zA-Z][a-zA-Z0-9_]*)
+
+							# Followed by a colon $3
+							\s*(:)\s*
+						)?
+
+						# Make sure the next word is not wait
+						(?!(?i:wait\s*))
+
+						# The for keyword $4
+						\b((?i:for))\b
+
+						# Make sure the next word is not all
+						(?!\s*(?i:all))
+
+					]
+                (3 punctuation.vhdl)
+                (4 keyword.language.vhdl)
+                (2 entity.name.tag.for.generate.begin.vhdl)))
+        (end
+            (regex [(?x)
+						# The word end $1
+						\b((?i:end))\s+
+						(
+							# Followed by generate or loop $3
+							 ((?i:generate|loop))
+
+							# But it really is required $4
+							|(\S+)
+						)\b
+
+						# The matching identifier $7 or an invalid identifier $8
+						(\s+((\2)|(.+?)))?
+
+						# Only space and a semicolon left
+						(?=\s*;)
+					]
+                (7 entity.name.tag.for.generate.end.vhdl)
+                (3 keyword.language.vhdl)
+                (8 invalid.illegal.mismatched.identifier.vhdl)
+                (4 invalid.illegal.loop.or.generate.required.vhdl)
+                (1 keyword.language.vhdl)))
+        (subzones
+            (include @control_patterns)
+            (include @entity_instantiation_pattern)
+            (include @component_pattern)
+            (include @component_instantiation_pattern)
+            (include @process_pattern)
+            (include @cleanup))))
+
+(collection parenthetical_list
+    (zone meta.block.parenthetical_list.vhdl
+        (start
+            (regex [\(]
+                (0 punctuation.vhdl)))
+        (end
+            (regex [(?<=\))]))
+        (subzones
+            (zone meta.list.element.vhdl
+                (start
+                    (regex [(?=['"a-zA-Z0-9])]))
+                (end
+                    (regex [(;|\)|,)]
+                        (0 meta.item.stopping.character.vhdl)))
+                (subzones
+                    (include @comments)
+                    (include @parenthetical_pair)
+                    (include @cleanup)))
+            (zone invalid.illegal.unexpected.parenthesis.vhdl
+                (match
+                    (regex [\)])))
+            (include @cleanup))))
+
+(collection entity_pattern
+    (zone meta.block.entity.vhdl
+        (start
+            (regex [(?x)
+						# From the beginning of the line ...
+						^\s*
+
+						# The word entity $1
+						((?i:entity\b))\s+
+
+						# The identifier $3 or an invalid identifier $4
+						(([a-zA-Z][a-zA-Z\d_]*)|(.+?))(?=\s)
+					]
+                (3 entity.name.type.entity.begin.vhdl)
+                (4 invalid.illegal.invalid.identifier.vhdl)
+                (1 keyword.language.vhdl)))
+        (end
+            (regex [(?x)
+
+						# The word end $1
+						\b((?i:end\b))
+
+						# Optional word entity $3
+						(\s+((?i:entity)))?
+
+						# Optional identifier match $6 or indentifier mismatch $7
+						(\s+((\3)|(.+?)))?
+						
+						# Make sure there is a semicolon following
+						(?=\s*;)
+					]
+                (7 invalid.illegal.mismatched.identifier.vhdl)
+                (3 keyword.language.vhdl)
+                (1 keyword.language.vhdl)
+                (6 entity.name.type.entity.end.vhdl)))
+        (subzones
+            (include @comments)
+            (include @generic_list_pattern)
+            (include @port_list_pattern)
+            (include @cleanup))))
+
+(collection support_constants
+    (zone support.constant.ieee.math_real.vhdl
+        (match
+            (regex [\b(?i:math_1_over_e|math_1_over_pi|math_1_over_sqrt_2|math_2_pi|math_3_pi_over_2|math_deg_to_rad|math_e|math_log10_of_e|math_log2_of_e|math_log_of_10|math_log_of_2|math_pi|math_pi_over_2|math_pi_over_3|math_pi_over_4|math_rad_to_deg|math_sqrt_2|math_sqrt_pi)\b])))
+    (zone support.constant.ieee.math_complex.vhdl
+        (match
+            (regex [\b(?i:math_cbase_1|math_cbase_j|math_czero|positive_real|principal_value)\b])))
+    (zone support.constant.std.standard.vhdl
+        (match
+            (regex [\b(?i:true|false)\b]))))
+
+(collection type_pattern
+    (zone meta.block.type.vhdl
+        (start
+            (regex [(?x)
+						# The word type $1
+						\b((?i:type))\s+
+
+						# Valid identifier $3 or invalid identifier $4
+						(([a-zA-Z][a-zA-Z0-9_]*)|(.+?))
+
+						(
+							# A semicolon is coming up if we are incomplete
+							 (?=\s*;)
+
+							# Or the word is comes up $7
+							|(\s+((?i:is)))
+						)\b
+					]
+                (7 keyword.language.vhdl)
+                (3 entity.name.type.type.vhdl)
+                (4 invalid.illegal.invalid.identifier.vhdl)
+                (1 keyword.language.vhdl)))
+        (end
+            (regex ;
+                (0 punctuation.vhdl)))
+        (subzones
+            (include @record_pattern)
+            (include @cleanup))))
+
+(collection case_pattern
+    (zone meta.block.case.vhdl
+        (start
+            (regex [(?x)
+						# Beginning of line ...
+						^\s*
+
+						# Optional identifier ... $3 or invalid identifier $4
+						(
+							(
+								 ([a-zA-Z][a-zA-Z0-9_]*)
+								|(.+?)
+							)
+							\s*:\s*
+						)?
+
+						# The word case $5
+						\b((?i:case))\b
+					]
+                (3 entity.name.tag.case.begin.vhdl)
+                (4 invalid.illegal.invalid.identifier.vhdl)
+                (5 keyword.language.vhdl)))
+        (end
+            (regex [(?x)
+						# The word end $1
+						\b((?i:end))\s*
+
+						# The word case $4 or invalid word $5
+						(\s+(((?i:case))|(.*?)))
+
+						# Optional identifier from before $8 or illegal $9
+						(\s+((\2)|(.*?)))?
+
+						# Ending with a semicolon
+						(?=\s*;)
+					]
+                (8 entity.name.tag.case.end.vhdl)
+                (4 keyword.language.vhdl)
+                (9 invalid.illegal.mismatched.identifier.vhdl)
+                (5 invalid.illegal.case.required.vhdl)
+                (1 keyword.language.vhdl)))
+        (subzones
+            (include @control_patterns)
+            (include @cleanup))))
+
+(collection control_patterns
+    (include @case_pattern)
+    (include @if_pattern)
+    (include @for_pattern)
+    (include @while_pattern))
+
+(collection if_pattern
+    (zone meta.block.if.vhdl
+        (start
+            (regex [(?x)
+						(
+							# Optional identifier $2
+							([a-zA-Z][a-zA-Z0-9_]*)
+
+							# Followed by a colon $3
+							\s*(:)\s*
+						)?
+
+						# Keyword if $4
+						\b((?i:if))\b
+					]
+                (3 punctuation.vhdl)
+                (4 keyword.language.vhdl)
+                (2 entity.name.tag.if.generate.begin.vhdl)))
+        (end
+            (regex [(?x)
+						# The word end $1
+						\b((?i:end))\s+
+
+						(
+							(
+								# Optional generate or if keyword $4
+								 ((?i:generate|if))
+
+								# Keyword if or generate required $5
+								|(\S+)
+							)\b
+							(
+								\s+
+								(
+									# Optional matching identifier $8
+									 (\2)
+
+									# Mismatched identifier $9
+									|(.+?)
+								)
+							)?
+						)?
+
+						# Followed by a semicolon
+						(?=\s*;)
+					]
+                (8 entity.name.tag.if.generate.end.vhdl)
+                (4 keyword.language.vhdl)
+                (9 invalid.illegal.mismatched.identifier.vhdl)
+                (5 invalid.illegal.if.or.generate.required.vhdl)
+                (1 keyword.language.vhdl)))
+        (subzones
+            (include @control_patterns)
+            (include @process_pattern)
+            (include @entity_instantiation_pattern)
+            (include @component_pattern)
+            (include @component_instantiation_pattern)
+            (include @cleanup))))
+
+(collection port_list_pattern
+    (zone meta.block.port_list.vhdl
+        (start
+            (regex [\b(?i:port)\b]
+                (0 keyword.language.vhdl)))
+        (end
+            (regex ;
+                (0 punctuation.vhdl)))
+        (subzones
+            (include @parenthetical_list))))
+
+(collection strings
+    (zone string.quoted.single.vhdl
+        (match
+            (regex '.')))
+    (zone string.quoted.double.vhdl
+        (start ")
+        (end ")
+        (subzones
+            (zone constant.character.escape.vhdl
+                (match
+                    (regex \\.)))))
+    (zone string.other.backslash.vhdl
+        (start
+            (regex \\))
+        (end
+            (regex \\))))
+
+(collection record_pattern
+    (zone meta.block.record.vhdl
+        (start
+            (regex [\b(?i:record)\b]
+                (0 keyword.language.vhdl)))
+        (end
+            (regex [(?x)
+						# The word end $1
+						\b((?i:end))
+
+						# The word record $2
+						\s+((?i:record))
+
+						# Optional identifier $5 or invalid identifier $6
+						(\s+(([a-zA-Z][a-zA-Z\d_]*)|(.*?)))?
+
+						# Only whitespace and semicolons can be left
+						(?=\s*;)
+					]
+                (5 entity.name.type.record.vhdl)
+                (1 keyword.language.vhdl)
+                (6 invalid.illegal.invalid.identifier.vhdl)
+                (2 keyword.language.vhdl)))
+        (subzones
+            (include @cleanup)))
+    (include @cleanup))
+
+(collection syntax_highlighting
+    (include @keywords)
+    (include @punctuation)
+    (include @support_constants)
+    (include @support_types)
+    (include @support_functions))
+
+(collection punctuation
+    (zone punctuation.vhdl
+        (match
+            (regex [(\.|,|:|;|\(|\))]))))
+
+(collection package_body_pattern
+    (zone meta.block.package_body.vhdl
+        (start
+            (regex [(?x)
+						# The word package $1
+						\b((?i:package))\s+
+
+						# ... but we want to be a package body $2
+						((?i:body))\s+
+
+						# The valid identifier $4 or the invalid one $5
+						(([a-zA-Z][a-zA-Z\d_]*)|(.+?))\s+
+
+						# ... and we end it with an is $6
+						((?i:is))\b
+					]
+                (4 entity.name.section.package_body.begin.vhdl)
+                (5 invalid.illegal.invalid.identifier.vhdl)
+                (1 keyword.language.vhdl)
+                (6 keyword.language.vhdl)
+                (2 keyword.language.vhdl)))
+        (end
+            (regex [(?x)
+						# The word end $1
+						\b((?i:end\b))
+
+						# Optional word package $3 body $4
+						(\s+((?i:package))\s+((?i:body)))?
+
+						# Optional identifier $7 or mismatched identifier $8
+						(\s+((\4)|(.+?)))?(?=\s*;)]
+                (7 entity.name.section.package_body.end.vhdl)
+                (3 keyword.language.vhdl)
+                (8 invalid.illegal.mismatched.identifier.vhdl)
+                (4 keyword.language.vhdl)
+                (1 keyword.language.vhdl)))
+        (subzones
+            (include @function_definition_pattern)
+            (include @procedure_definition_pattern)
+            (include @type_pattern)
+            (include @subtype_pattern)
+            (include @record_pattern)
+            (include @cleanup))))
+
+(collection process_pattern
+    (zone meta.block.process.vhdl
+        (start
+            (regex [(?x)
+						# From the beginning of the line
+						^\s*
+
+						(
+							# Optional identifier $2
+							([a-zA-Z][a-zA-Z0-9_]*)
+
+							# Colon $3
+							\s*(:)\s*
+						)?
+
+						# The word process #4
+						((?i:process))
+					]
+                (3 punctuation.vhdl)
+                (4 keyword.language.vhdl)
+                (2 entity.name.section.process.begin.vhdl)))
+        (end
+            (regex [(?x)
+						# The word end $1
+						((?i:end))
+
+						# Optional word process $3
+						(\s+((?i:process)))
+
+						# Optional identifier $6 or invalid identifier $7
+						(\s+((\2)|(.+?)))?
+
+						(?=\s*;)
+					]
+                (7 invalid.illegal.invalid.identifier.vhdl)
+                (3 keyword.language.vhdl)
+                (1 keyword.language.vhdl)
+                (6 entity.name.section.process.end.vhdl)))
+        (subzones
+            (include @control_patterns)
+            (include @cleanup))))
+
+(collection keywords
+    (zone keyword.attributes.vhdl
+        (match
+            (regex ['(?i:active|ascending|base|delayed|driving|event|high|image|instance|last|left|leftof|length|low|path|pos|pred|quiet|range|reverse|right|rightof|simple|stable|succ|transaction|val|value)\b])))
+    (zone keyword.language.vhdl
+        (match
+            (regex [\b(?i:abs|access|after|alias|all|and|architecture|array|assert|attribute|begin|block|body|buffer|bus|case|component|configuration|constant|disconnect|downto|else|elsif|end|entity|exit|file|for|function|generate|generic|group|guarded|if|impure|in|inertial|inout|is|label|library|linkage|literal|loop|map|mod|nand|new|next|nor|not|null|of|on|open|or|others|out|package|port|postponed|procedure|process|pure|range|record|register|reject|rem|report|return|rol|ror|select|severity|shared|signal|sla|sll|sra|srl|subtype|then|to|transport|type|unaffected|units|until|use|variable|wait|when|while|with|xnor|xor)\b])))
+    (zone keyword.operator.vhdl
+        (match
+            (regex [(\+|\-|<=|=|=>|:=|>=|>|<|/|\||&|(\*{1,2}))]))))
+
+(collection package_pattern
+    (zone meta.block.package.vhdl
+        (start
+            (regex [(?x)
+						# The word package $1
+						\b((?i:package))\s+
+
+						# ... but we do not want to be a package body
+						(?!(?i:body))
+
+						# The valid identifier $3 or the invalid one $4
+						(([a-zA-Z][a-zA-Z\d_]*)|(.+?))\s+
+
+						# ... and we end it with an is $5
+						((?i:is))\b
+					]
+                (3 entity.name.section.package.begin.vhdl)
+                (4 invalid.illegal.invalid.identifier.vhdl)
+                (5 keyword.language.vhdl)
+                (1 keyword.language.vhdl)))
+        (end
+            (regex [(?x)
+						# The word end $1
+						\b((?i:end\b))
+
+						# Optional word package $3
+						(\s+((?i:package)))?
+
+						# Optional identifier $6 or mismatched identifier $7
+						(\s+((\2)|(.+?)))?(?=\s*;)]
+                (7 invalid.illegal.mismatched.identifier.vhdl)
+                (3 keyword.language.vhdl)
+                (1 keyword.language.vhdl)
+                (6 entity.name.section.package.end.vhdl)))
+        (subzones
+            (include @function_prototype_pattern)
+            (include @procedure_prototype_pattern)
+            (include @type_pattern)
+            (include @subtype_pattern)
+            (include @record_pattern)
+            (include @component_pattern)
+            (include @cleanup))))
+
+(collection attribute_list
+    (zone meta.block.attribute_list
+        (start
+            (regex [\'\(]
+                (0 punctuation.vhdl)))
+        (end
+            (regex [\)]
+                (0 punctuation.vhdl)))
+        (subzones
+            (include @parenthetical_list)
+            (include @cleanup))))
+
+(collection parenthetical_pair
+    (zone meta.block.parenthetical_pair.vhdl
+        (start
+            (regex [\(]
+                (0 punctuation.vhdl)))
+        (end
+            (regex [\)]
+                (0 punctuation.vhdl)))
+        (subzones
+            (include @parenthetical_pair)
+            (include @cleanup))))
+
+(collection constants_numeric
+    (zone constant.numeric.floating_point.vhdl
+        (match
+            (regex [\b([+\-]?[\d_]+\.[\d_]+([eE][+\-]?[\d_]+)?)\b])))
+    (zone constant.numeric.base_pound_number_pound.vhdl
+        (match
+            (regex [\b\d+#[\h_]+#\b])))
+    (zone constant.numeric.integer.vhdl
+        (match
+            (regex [\b[\d_]+([eE][\d_]+)?\b])))
+    (zone constant.numeric.quoted.double.string.hex.vhdl
+        (match
+            (regex [[xX]"[0-9a-fA-F_uUxXzZwWlLhH\-]+"])))
+    (zone constant.numeric.quoted.double.string.octal.vhdl
+        (match
+            (regex [[oO]"[0-7_uUxXzZwWlLhH\-]+"])))
+    (zone constant.numeric.quoted.double.string.binary.vhdl
+        (match
+            (regex [[bB]?"[01_uUxXzZwWlLhH\-]+"])))
+    (zone constant.numeric.quoted.double.string.illegal.vhdl
+        (match
+            (regex [([bBoOxX]".+?")]
+                (1 invalid.illegal.quoted.double.string.vhdl))))
+    (zone constant.numeric.quoted.single.std_logic
+        (match
+            (regex ['[01uUxXzZwWlLhH\-]']))))
+
+(collection support_functions
+    (zone support.function.std.env.vhdl
+        (match
+            (regex [\b(?i:finish|stop|resolution_limit)\b])))
+    (zone support.function.std.textio.vhdl
+        (match
+            (regex [\b(?i:readline|read|writeline|write|endfile|endline)\b])))
+    (zone support.function.ieee.std_logic_1164.vhdl
+        (match
+            (regex [\b(?i:rising_edge|falling_edge|to_bit|to_bitvector|to_stdulogic|to_stdlogicvector|to_stdulogicvector|is_x)\b])))
+    (zone support.function.ieee.numeric_std.vhdl
+        (match
+            (regex [\b(?i:shift_left|shift_right|rotate_left|rotate_right|resize|to_integer|to_unsigned|to_signed)\b])))
+    (zone support.function.ieee.math_real.vhdl
+        (match
+            (regex [\b(?i:arccos(h?)|arcsin(h?)|arctan|arctanh|cbrt|ceil|cos|cosh|exp|floor|log10|log2|log|realmax|realmin|round|sign|sin|sinh|sqrt|tan|tanh|trunc)\b])))
+    (zone support.function.ieee.math_complex.vhdl
+        (match
+            (regex [\b(?i:arg|cmplx|complex_to_polar|conj|get_principal_value|polar_to_complex)\b]))))
+
+(collection cleanup
+    (include @comments)
+    (include @constants_numeric)
+    (include @strings)
+    (include @attribute_list)
+    (include @syntax_highlighting))
+
+(collection procedure_prototype_pattern
+    (zone meta.block.procedure_prototype.vhdl
+        (start
+            (regex [(?x)
+						\b((?i:procedure))\s+
+						(([a-zA-Z][a-zA-Z0-9_]*)|(.+?))
+						(?=\s*(\(|;))
+					]
+                (3 entity.name.function.procedure.begin.vhdl)
+                (4 invalid.illegal.invalid.identifier.vhdl)
+                (1 keyword.language.vhdl)))
+        (end
+            (regex ;
+                (0 punctual.vhdl)))
+        (subzones
+            (include @parenthetical_list))))
+
+(collection procedure_definition_pattern
+    (zone meta.block.procedure_definition.vhdl
+        (start
+            (regex [(?x)
+						# From the beginning of the line
+						^\s*
+
+						# The word function $1
+						((?i:procedure))\s+
+
+						(
+							# A valid normal identifier $3
+							 ([a-zA-Z][a-zA-Z\d_]*)
+							# A valid quoted identifier $4
+							|("\S+")
+							# An invalid identifier $5
+							|(.+?)
+						)
+
+						# Check to make sure we have a list is
+						(?=\s*(\(|(?i:is)))
+					]
+                (3 entity.name.function.procedure.begin.vhdl)
+                (4 entity.name.function.procedure.begin.vhdl)
+                (5 invalid.illegal.invalid.identifier.vhdl)
+                (1 keyword.language.vhdl)))
+        (end
+            (regex [(?x)
+						# From the beginning of the line
+						^\s*
+
+						# The word end $1
+						((?i:end))
+
+						# Optional word function $3
+						(\s+((?i:procedure)))?
+
+						# Optional matched identifier $6 or mismatched identifier $7
+						(\s+((\3|\4)|(.+?)))?
+
+						# Ending with whitespace and semicolon
+						(?=\s*;)
+					]
+                (7 invalid.illegal.mismatched.identifier.vhdl)
+                (3 keyword.language.vhdl)
+                (1 keyword.language.vhdl)
+                (6 entity.name.function.procedure.end.vhdl)))
+        (subzones
+            (include @parenthetical_list)
+            (include @control_patterns)
+            (include @type_pattern)
+            (include @record_pattern)
+            (include @cleanup))))

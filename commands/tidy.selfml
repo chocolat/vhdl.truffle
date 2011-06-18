@@ -1,0 +1,22 @@
+(trigger
+    (key [[ctrl][shift]H]))
+
+(name Tidy)
+
+(only-in source.vhdl)
+
+(input nothing)
+
+(output replace-all)
+
+(save file)
+
+(script [#!/bin/bash
+# beautifies VHDL code using Emacs
+
+EMACS=emacs
+
+$EMACS --batch "$TM_FILEPATH" --eval="(setq-default vhdl-basic-offset $TM_TAB_SIZE)" --eval="(vhdl-beautify-buffer)"  -f save-buffer &> /dev/null
+
+cat "$TM_FILEPATH"
+])

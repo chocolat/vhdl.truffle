@@ -1,0 +1,6 @@
+(menu
+    (submenu Behavioral snippet.architecture snippet.entity snippet.entity_architecture snippet.package snippet.process snippet.aprocess snippet.sprocess)
+    (submenu Control snippet.case snippet.if snippet.else snippet.elsif snippet.forg snippet.for snippet.while)
+    (submenu Instantiations command.instantiate-component command.instantiate-entity)
+    (submenu Types snippet.std_logic_vector-downto snippet.std_logic_vector-range snippet.signed-downto snippet.signed-range snippet.unsigned-downto snippet.unsigned-range)
+    snippet.vhdl-template)

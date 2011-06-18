@@ -1,0 +1,10 @@
+(name if)
+
+(trigger
+    (tab if))
+
+(only-in source.vhdl)
+
+(snippet [if %{1="expression"} then
+	%{0}
+end if ;])

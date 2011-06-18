@@ -1,0 +1,10 @@
+(name while)
+
+(trigger
+    (tab while))
+
+(only-in source.vhdl)
+
+(snippet [%{1="identifier"} : while %{2="expression"} loop
+	%{0}
+end loop ; -- %{1="identifier"}])
