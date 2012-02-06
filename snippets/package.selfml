@@ -5,6 +5,6 @@
 
 (only-in source.vhdl)
 
-(snippet [package %{1="%{TM_FILENAME/(.*?)(\\..+)/$1_p/}"} is
+(snippet [package %{1="%{TM_FILENAME/(.*?)(\..+)/$1_p/}"} is
 	%{0}
-end package ; -- %{1="%{TM_FILENAME/(.*?)(\\..+)/$1_p/}"} ])
+end package ; -- %{1="%{TM_FILENAME/(.*?)(\..+)/$1_p/}"} ])
